@@ -6,7 +6,10 @@
   "mixins": [
     "MEStorageMenuMixin",
     "NetworkStorageMixin",
-    "IngredientMixin"
+    "IngredientMixin",
+    "FillCraftingGridFromRecipePacketMixin",
+    "CraftingTermMenuMixin",
+    "CraftConfirmMenuMixin"
   ],
   "client": [],
   "injectors": {

@@ -11,5 +11,5 @@ import java.util.function.Supplier;
 public class AE2FCTItems {
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(BuiltInRegistries.ITEM, Ae2fct.MODID);
 
-    public static final Supplier<Item> VIRTUAL_FLUID_ITEM = ITEMS.register("virtual_fluid_item", VirtualFluidItem::new);
+    public static final Supplier<VirtualFluidItem> VIRTUAL_FLUID_ITEM = ITEMS.register("virtual_fluid_item", VirtualFluidItem::new);
 }

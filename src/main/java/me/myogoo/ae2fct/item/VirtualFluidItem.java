@@ -1,7 +1,9 @@
 package me.myogoo.ae2fct.item;
 
 import me.myogoo.ae2fct.client.VirtualFluidItemRenderer;
+import me.myogoo.ae2fct.codec.VirtualFluid;
 import me.myogoo.ae2fct.init.AE2FCTDataComponent;
+import me.myogoo.ae2fct.init.AE2FCTItems;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.network.chat.Component;
@@ -11,7 +13,6 @@ import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import net.neoforged.neoforge.fluids.FluidStack;
 
-import java.util.Objects;
 import java.util.function.Consumer;
 
 public class VirtualFluidItem extends Item {
@@ -19,12 +20,7 @@ public class VirtualFluidItem extends Item {
         super(new Properties());
     }
 
-    public FluidStack getFluidStack(ItemStack stack) {
-        if (!stack.has(AE2FCTDataComponent.VIRTUAL_FLUID)) {
-            return FluidStack.EMPTY;
-        }
-        return Objects.requireNonNull(stack.get(AE2FCTDataComponent.VIRTUAL_FLUID)).fluid();
-    }
+
 
     @Override
     public void initializeClient(
@@ -51,4 +47,9 @@ public class VirtualFluidItem extends Item {
         return fs.getHoverName();
     }
 
+    public static ItemStack createItemStack(Fluid fluid) {
+        ItemStack stack = new ItemStack(AE2FCTItems.VIRTUAL_FLUID_ITEM.get());
+        stack.set(AE2FCTDataComponent.VIRTUAL_FLUID, new VirtualFluid(new FluidStack(fluid, 1000), 1000));
+        return stack;
+    }
 }

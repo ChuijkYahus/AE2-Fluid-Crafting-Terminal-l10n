@@ -40,9 +40,9 @@ public class VirtualFluidItemRenderer extends BlockEntityWithoutLevelRenderer {
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
         RenderSystem.setShaderTexture(0, sprite.atlasLocation());
 
-
         int alpha = (color >> 24) & 0xFF;
-        if (alpha == 0) alpha = 255;
+        if (alpha == 0)
+            alpha = 255;
 
         float r = ((color >> 16) & 0xFF) / 255f;
         float g = ((color >> 8) & 0xFF) / 255f;
@@ -64,21 +64,29 @@ public class VirtualFluidItemRenderer extends BlockEntityWithoutLevelRenderer {
         float zBack = 0.499f;
 
         // Front face (+Z)
-        renderFace(matrix4f, vertexConsumer, 0, 1, 0, 1, zFront, sprite, r, g, b, a, packedLight, packedOverlay, 0, 0, 1);
+        renderFace(matrix4f, vertexConsumer, 0, 1, 0, 1, zFront, sprite, r, g, b, a, packedLight, packedOverlay, 0, 0,
+                1);
 
         // Back face (-Z)
-        renderFace(matrix4f, vertexConsumer, 1, 0, 0, 1, zBack, sprite, r, g, b, a, packedLight, packedOverlay, 0, 0, -1);
+        renderFace(matrix4f, vertexConsumer, 1, 0, 0, 1, zBack, sprite, r, g, b, a, packedLight, packedOverlay, 0, 0,
+                -1);
 
         poseStack.popPose();
         RenderSystem.disableBlend();
         BufferUploader.drawWithShader(vertexConsumer.buildOrThrow());
     }
 
-    private void renderFace(Matrix4f matrix, VertexConsumer builder, float minX, float maxX, float minY, float maxY, float z,
-                            TextureAtlasSprite sprite, float r, float g, float b, float a, int light, int overlay, float nx, float ny, float nz) {
-        builder.addVertex(matrix, minX, minY, z).setColor(r, g, b, a).setUv(sprite.getU0(), sprite.getV1()).setOverlay(overlay).setLight(light).setNormal(nx, ny, nz);
-        builder.addVertex(matrix, maxX, minY, z).setColor(r, g, b, a).setUv(sprite.getU1(), sprite.getV1()).setOverlay(overlay).setLight(light).setNormal(nx, ny, nz);
-        builder.addVertex(matrix, maxX, maxY, z).setColor(r, g, b, a).setUv(sprite.getU1(), sprite.getV0()).setOverlay(overlay).setLight(light).setNormal(nx, ny, nz);
-        builder.addVertex(matrix, minX, maxY, z).setColor(r, g, b, a).setUv(sprite.getU0(), sprite.getV0()).setOverlay(overlay).setLight(light).setNormal(nx, ny, nz);
+    private void renderFace(Matrix4f matrix, VertexConsumer builder, float minX, float maxX, float minY, float maxY,
+            float z,
+            TextureAtlasSprite sprite, float r, float g, float b, float a, int light, int overlay, float nx, float ny,
+            float nz) {
+        builder.addVertex(matrix, minX, minY, z).setColor(r, g, b, a).setUv(sprite.getU0(), sprite.getV1())
+                .setOverlay(overlay).setLight(light).setNormal(nx, ny, nz);
+        builder.addVertex(matrix, maxX, minY, z).setColor(r, g, b, a).setUv(sprite.getU1(), sprite.getV1())
+                .setOverlay(overlay).setLight(light).setNormal(nx, ny, nz);
+        builder.addVertex(matrix, maxX, maxY, z).setColor(r, g, b, a).setUv(sprite.getU1(), sprite.getV0())
+                .setOverlay(overlay).setLight(light).setNormal(nx, ny, nz);
+        builder.addVertex(matrix, minX, maxY, z).setColor(r, g, b, a).setUv(sprite.getU0(), sprite.getV0())
+                .setOverlay(overlay).setLight(light).setNormal(nx, ny, nz);
     }
 }
