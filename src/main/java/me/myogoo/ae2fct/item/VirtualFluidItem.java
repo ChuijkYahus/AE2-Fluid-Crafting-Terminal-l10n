@@ -1,13 +1,18 @@
 package me.myogoo.ae2fct.item;
 
+import me.myogoo.ae2fct.client.VirtualFluidItemRenderer;
 import me.myogoo.ae2fct.init.AE2FCTDataComponent;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluid;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import net.neoforged.neoforge.fluids.FluidStack;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class VirtualFluidItem extends Item {
     public VirtualFluidItem() {
@@ -23,13 +28,13 @@ public class VirtualFluidItem extends Item {
 
     @Override
     public void initializeClient(
-            java.util.function.Consumer<net.neoforged.neoforge.client.extensions.common.IClientItemExtensions> consumer) {
-        consumer.accept(new net.neoforged.neoforge.client.extensions.common.IClientItemExtensions() {
+            Consumer<IClientItemExtensions> consumer) {
+        consumer.accept(new IClientItemExtensions() {
             @Override
-            public net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer getCustomRenderer() {
-                return new me.myogoo.ae2fct.client.VirtualFluidItemRenderer(
-                        net.minecraft.client.Minecraft.getInstance().getBlockEntityRenderDispatcher(),
-                        net.minecraft.client.Minecraft.getInstance().getEntityModels());
+            public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+                return new VirtualFluidItemRenderer(
+                        Minecraft.getInstance().getBlockEntityRenderDispatcher(),
+                        Minecraft.getInstance().getEntityModels());
             }
         });
     }
