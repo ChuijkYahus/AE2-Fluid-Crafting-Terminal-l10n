@@ -30,7 +30,7 @@ repositories {
 }
 
 base {
-    archivesName = mod_id
+    archivesName = "AE2-Fluid-Crafting-Terminal-${minecraft_version}"
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
@@ -119,7 +119,6 @@ dependencies {
     compileOnly "org.appliedenergistics:guideme:${guideme_version}:api"
     runtimeOnly "org.appliedenergistics:guideme:${guideme_version}"
 
-    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${JEI_version}"
     runtimeOnly "mezz.jei:jei-${minecraft_version}-neoforge:${JEI_version}"
     runtimeOnly "curse.maven:ae2-jei-integration-1074338:5748513"
 
