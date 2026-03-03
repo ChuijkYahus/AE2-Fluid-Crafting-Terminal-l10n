@@ -14,7 +14,10 @@ import me.myogoo.ae2fct.init.AE2FCTItems;
 import me.myogoo.ae2fct.codec.VirtualFluid;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
 import org.jetbrains.annotations.Nullable;
@@ -26,6 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import appeng.api.storage.MEStorage;
 import appeng.api.config.Actionable;
 import appeng.api.networking.energy.IEnergySource;
+import net.minecraft.world.entity.player.Player;
 
 @Mixin(value = MEStorageMenu.class, remap = false)
 public abstract class MEStorageMenuMixin extends AEBaseMenu {
@@ -115,5 +119,73 @@ public abstract class MEStorageMenuMixin extends AEBaseMenu {
                 }
             }
         }
+    }
+
+    @Override
+    public void removed(Player player) {
+        super.removed(player);
+
+        if (!player.level().isClientSide() && this.storage != null && this.energySource != null) {
+            ItemStack carried = this.getCarried();
+            if (!carried.isEmpty() && carried.is(AE2FCTItems.VIRTUAL_FLUID_ITEM.get())) {
+                long inserted = StorageHelper.poweredInsert(
+                        this.energySource,
+                        this.storage,
+                        AEItemKey.of(carried),
+                        carried.getCount(),
+                        this.getActionSource(),
+                        Actionable.MODULATE);
+                if (inserted > 0) {
+                    carried.shrink((int) inserted);
+                }
+                if (carried.isEmpty()) {
+                    this.setCarried(ItemStack.EMPTY);
+                }
+            }
+
+            for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+                ItemStack stack = player.getInventory().getItem(i);
+                if (!stack.isEmpty() && stack.is(AE2FCTItems.VIRTUAL_FLUID_ITEM.get())) {
+                    long inserted = StorageHelper.poweredInsert(
+                            this.energySource,
+                            this.storage,
+                            AEItemKey.of(stack),
+                            stack.getCount(),
+                            this.getActionSource(),
+                            Actionable.MODULATE);
+                    if (inserted > 0) {
+                        stack.shrink((int) inserted);
+                    }
+                    if (stack.isEmpty()) {
+                        player.getInventory().setItem(i, ItemStack.EMPTY);
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public void clicked(int slotId, int button, ClickType clickType, Player player) {
+        if (clickType == ClickType.THROW) {
+            if (slotId >= 0 && slotId < this.slots.size()) {
+                Slot clickSlot = this.slots.get(slotId);
+                if (clickSlot != null && clickSlot.hasItem()
+                        && clickSlot.getItem().is(AE2FCTItems.VIRTUAL_FLUID_ITEM.get())) {
+                    return;
+                }
+            } else if (slotId == AbstractContainerMenu.SLOT_CLICKED_OUTSIDE) {
+                ItemStack carried = this.getCarried();
+                if (!carried.isEmpty() && carried.is(AE2FCTItems.VIRTUAL_FLUID_ITEM.get())) {
+                    return;
+                }
+            }
+        } else if (clickType == ClickType.PICKUP && slotId == AbstractContainerMenu.SLOT_CLICKED_OUTSIDE) {
+            ItemStack carried = this.getCarried();
+            if (!carried.isEmpty() && carried.is(AE2FCTItems.VIRTUAL_FLUID_ITEM.get())) {
+                return;
+            }
+        }
+
+        super.clicked(slotId, button, clickType, player);
     }
 }
