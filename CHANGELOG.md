@@ -1,7 +1,4 @@
 # Changelog
 
-## Feature
-You can craft recipes containing fluid buckets without a bucket in the crafting terminal.
-
-## Future
-We plan to install an upgrade module later to enable the use of fluid crafting.
+## BugFixes
+- Fixed an issue where fluid items could be picked up even when not at 1000mb
