@@ -13,6 +13,6 @@
 </p>
 
 ## Feature
-- You can craft recipes containing fluid buckets **without a bucket** in the crafting terminal.
+AE2 Fluid Crafting Terminal is an addon for Applied Energistics 2 that simplifies and enhances the fluid crafting experience. It provides a dedicated terminal and improved mechanics to handle fluids as naturally as items within your ME network.
 ## License
-- code: LGPL 3.0
+code: LGPL 3.0
