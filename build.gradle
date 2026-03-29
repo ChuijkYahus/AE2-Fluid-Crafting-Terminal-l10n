@@ -55,6 +55,10 @@ neoForge {
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+
+            systemProperty("guideme.ae2.guide.sources", "${file("src/main/resources").absolutePath}/assets/${mod_id}/ae2guide")
+            systemProperty("guideme.ae2.guide.sourcesNamespace", mod_id)
+
         }
 
         server {
@@ -115,6 +119,7 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 dependencies {
     implementation "org.appliedenergistics:appliedenergistics2:${AE2_version}"
     implementation "de.mari_023:ae2wtlib_api:${AE2WTLib_version}"
+    implementation "me.myogoo:myotus:${Myotus_version}"
 
     compileOnly "org.appliedenergistics:guideme:${guideme_version}:api"
     runtimeOnly "org.appliedenergistics:guideme:${guideme_version}"

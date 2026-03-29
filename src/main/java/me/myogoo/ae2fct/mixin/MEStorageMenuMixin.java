@@ -13,6 +13,7 @@ import appeng.menu.me.common.MEStorageMenu;
 import me.myogoo.ae2fct.codec.VirtualFluid;
 import me.myogoo.ae2fct.init.AE2FCTDataComponent;
 import me.myogoo.ae2fct.init.AE2FCTItems;
+import me.myogoo.myotus.menu.TerminalUpgradeHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -45,15 +46,13 @@ public abstract class MEStorageMenuMixin extends AEBaseMenu {
         super(menuType, id, playerInventory, host);
     }
 
-    // ── Helper Methods ──────────────────────────────────────────────────────
-
     @Unique
-    private static boolean isVirtualFluidItem(ItemStack stack) {
+    private static boolean aE2FluidCraftingTerminal_1_21_1$isVirtualFluidItem(ItemStack stack) {
         return !stack.isEmpty() && stack.is(AE2FCTItems.VIRTUAL_FLUID_ITEM.get());
     }
 
     @Unique
-    private ItemStack createVirtualFluidItem(AEFluidKey fluidKey, long amount) {
+    private ItemStack aE2FluidCraftingTerminal_1_21_1$createVirtualFluidItem(AEFluidKey fluidKey, long amount) {
         ItemStack stack = new ItemStack(AE2FCTItems.VIRTUAL_FLUID_ITEM.get());
         stack.set(AE2FCTDataComponent.VIRTUAL_FLUID,
                 new VirtualFluid(new FluidStack(fluidKey.getFluid(), (int) amount), (int) amount));
@@ -65,7 +64,7 @@ public abstract class MEStorageMenuMixin extends AEBaseMenu {
         long extracted = StorageHelper.poweredExtraction(
                 this.energySource, this.storage, fluidKey, FLUID_UNIT, menu.getActionSource());
         if (extracted == FLUID_UNIT) {
-            menu.setCarried(createVirtualFluidItem(fluidKey, extracted));
+            menu.setCarried(aE2FluidCraftingTerminal_1_21_1$createVirtualFluidItem(fluidKey, extracted));
             return true;
         }
         return false;
@@ -81,8 +80,6 @@ public abstract class MEStorageMenuMixin extends AEBaseMenu {
         }
     }
 
-    // ── Injection ───────────────────────────────────────────────────────────
-
     @Inject(method = "handleNetworkInteraction", at = @At("HEAD"), cancellable = true)
     private void interceptFluidClick(ServerPlayer player, @Nullable AEKey clickedKey, InventoryAction action,
             CallbackInfo ci) {
@@ -91,7 +88,11 @@ public abstract class MEStorageMenuMixin extends AEBaseMenu {
         }
 
         MEStorageMenu menu = (MEStorageMenu) (Object) this;
-        boolean carriedIsVirtual = isVirtualFluidItem(menu.getCarried());
+        if (!TerminalUpgradeHelper.hasUpgrade(menu, AE2FCTItems.TERMINAL_FLUID_INTERACT_CARD.get())) {
+            return;
+        }
+
+        boolean carriedIsVirtual = aE2FluidCraftingTerminal_1_21_1$isVirtualFluidItem(menu.getCarried());
 
         switch (action) {
             case PICKUP_OR_SET_DOWN -> {
@@ -130,8 +131,6 @@ public abstract class MEStorageMenuMixin extends AEBaseMenu {
         }
     }
 
-    // ── Overrides ───────────────────────────────────────────────────────────
-
     @Override
     public void removed(Player player) {
         super.removed(player);
@@ -140,20 +139,18 @@ public abstract class MEStorageMenuMixin extends AEBaseMenu {
             return;
         }
 
-        // Return carried virtual fluid
         ItemStack carried = this.getCarried();
-        if (isVirtualFluidItem(carried)) {
+        if (aE2FluidCraftingTerminal_1_21_1$isVirtualFluidItem(carried)) {
             returnVirtualFluidToStorage(carried, carried.getCount());
             if (carried.isEmpty()) {
                 this.setCarried(ItemStack.EMPTY);
             }
         }
 
-        // Return inventory virtual fluids
         Inventory inventory = player.getInventory();
         for (int i = 0; i < inventory.getContainerSize(); i++) {
             ItemStack stack = inventory.getItem(i);
-            if (isVirtualFluidItem(stack)) {
+            if (aE2FluidCraftingTerminal_1_21_1$isVirtualFluidItem(stack)) {
                 returnVirtualFluidToStorage(stack, stack.getCount());
                 if (stack.isEmpty()) {
                     inventory.setItem(i, ItemStack.EMPTY);
@@ -167,16 +164,16 @@ public abstract class MEStorageMenuMixin extends AEBaseMenu {
         if (clickType == ClickType.THROW) {
             if (slotId >= 0 && slotId < this.slots.size()) {
                 Slot slot = this.slots.get(slotId);
-                if (slot != null && isVirtualFluidItem(slot.getItem())) {
+                if (slot != null && aE2FluidCraftingTerminal_1_21_1$isVirtualFluidItem(slot.getItem())) {
                     return;
                 }
             } else if (slotId == AbstractContainerMenu.SLOT_CLICKED_OUTSIDE
-                    && isVirtualFluidItem(this.getCarried())) {
+                    && aE2FluidCraftingTerminal_1_21_1$isVirtualFluidItem(this.getCarried())) {
                 return;
             }
         } else if (clickType == ClickType.PICKUP
                 && slotId == AbstractContainerMenu.SLOT_CLICKED_OUTSIDE
-                && isVirtualFluidItem(this.getCarried())) {
+                && aE2FluidCraftingTerminal_1_21_1$isVirtualFluidItem(this.getCarried())) {
             return;
         }
 
