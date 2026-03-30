@@ -25,6 +25,9 @@ repositories {
         }
     }
     maven {
+        url = "https://api.modrinth.com/maven"
+    }
+    maven {
         url "https://cursemaven.com"
     }
 }
@@ -55,6 +58,10 @@ neoForge {
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+
+            systemProperty("guideme.ae2.guide.sources", "${file("src/main/resources").absolutePath}/assets/${mod_id}/ae2guide")
+            systemProperty("guideme.ae2.guide.sourcesNamespace", mod_id)
+
         }
 
         server {
@@ -115,14 +122,19 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 dependencies {
     implementation "org.appliedenergistics:appliedenergistics2:${AE2_version}"
     implementation "de.mari_023:ae2wtlib_api:${AE2WTLib_version}"
+    implementation "me.myogoo:myotus:${Myotus_version}"
 
+    compileOnly "maven.modrinth:extended-terminal:1.21.1-1.1.2"
     compileOnly "org.appliedenergistics:guideme:${guideme_version}:api"
     runtimeOnly "org.appliedenergistics:guideme:${guideme_version}"
 
     runtimeOnly "mezz.jei:jei-${minecraft_version}-neoforge:${JEI_version}"
     runtimeOnly "curse.maven:ae2-jei-integration-1074338:5748513"
 
-    runtimeOnly "curse.maven:immersive-engineering-231951:6733669"
+    runtimeOnly "maven.modrinth:immersiveengineering:12.4.2-194"
+
+    runtimeOnly "maven.modrinth:extended-crafting:7.0.7"
+    runtimeOnly "maven.modrinth:cucumber:8.0.13"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

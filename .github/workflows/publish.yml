@@ -64,3 +64,4 @@ jobs:
 
           dependencies: |
             ae2(required){modrinth:XxWD5pD3}{curseforge:223794}
+            myotus(required){modrinth:32YA23Pp}{curseforge:1496024}

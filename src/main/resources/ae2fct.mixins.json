@@ -8,7 +8,10 @@
     "NetworkStorageMixin",
     "IngredientMixin",
     "FillCraftingGridFromRecipePacketMixin",
+    "et.ETFillRecipeBasePacketMixin",
+    "et.ETFillTableCraftingGridFromRecipePacketMixin",
     "CraftingTermMenuMixin",
+    "et.ETTerminalBaseMenuMixin",
     "CraftConfirmMenuMixin"
   ],
   "client": [],

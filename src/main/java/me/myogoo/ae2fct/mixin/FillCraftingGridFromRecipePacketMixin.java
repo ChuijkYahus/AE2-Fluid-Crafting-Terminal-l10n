@@ -1,20 +1,23 @@
 package me.myogoo.ae2fct.mixin;
 
 import appeng.api.networking.crafting.ICraftingService;
-import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.KeyCounter;
 import appeng.core.network.serverbound.FillCraftingGridFromRecipePacket;
+import appeng.menu.me.common.MEStorageMenu;
 import appeng.util.prioritylist.IPartitionList;
-import me.myogoo.ae2fct.item.VirtualFluidItem;
-import net.minecraft.world.item.ItemStack;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import me.myogoo.ae2fct.init.AE2FCTItems;
+import me.myogoo.ae2fct.util.FluidCraftingHelper;
+import me.myogoo.myotus.menu.TerminalUpgradeHelper;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.level.material.Fluid;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.FluidUtil;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.*;
@@ -22,38 +25,42 @@ import java.util.*;
 @Mixin(value = FillCraftingGridFromRecipePacket.class, remap = false)
 public class FillCraftingGridFromRecipePacketMixin {
 
+    @Unique
+    private static final ThreadLocal<Boolean> ae2fct$fluidCraftingEnabled = ThreadLocal.withInitial(() -> false);
+
+    @WrapMethod(method = "handleOnServer")
+    private void ae2fct$withFluidCraftingState(ServerPlayer player, Operation<Void> original) {
+        boolean enabled = false;
+        if (player.containerMenu instanceof MEStorageMenu menu) {
+            enabled = TerminalUpgradeHelper.hasUpgrade(menu, AE2FCTItems.TERMINAL_FLUID_INTERACT_CARD.get());
+        }
+
+        ae2fct$fluidCraftingEnabled.set(enabled);
+        try {
+            original.call(player);
+        } finally {
+            ae2fct$fluidCraftingEnabled.remove();
+        }
+    }
+
     @Inject(method = "findBestMatchingItemStack", at = @At("RETURN"), cancellable = true)
     private void optimizedFindBestMatchingItemStack(Ingredient ingredient, IPartitionList filter, KeyCounter storage,
             CallbackInfoReturnable<List<AEItemKey>> cir) {
-        Set<AEItemKey> enhancedResults = null;
-        Set<Fluid> checkedFluids = null;
-
-        for (ItemStack stack : ingredient.getItems()) {
-            FluidStack fluidInItem = FluidUtil.getFluidContained(stack).orElse(FluidStack.EMPTY);
-            if (!fluidInItem.isEmpty()) {
-                Fluid fluid = fluidInItem.getFluid();
-                if (checkedFluids == null)
-                    checkedFluids = new HashSet<>();
-                if (checkedFluids.add(fluid)) {
-                    AEFluidKey fluidKey = AEFluidKey.of(fluid);
-                    if (fluidKey != null && storage.get(fluidKey) > 0) {
-                        AEItemKey vKey = AEItemKey.of(VirtualFluidItem.createItemStack(fluid));
-                        if (vKey != null && (filter == null || filter.isListed(vKey))) {
-                            if (enhancedResults == null)
-                                enhancedResults = new LinkedHashSet<>();
-                            enhancedResults.add(vKey);
-                        }
-                    }
-                }
-            }
+        if (!ae2fct$fluidCraftingEnabled.get()) {
+            return;
         }
 
-        if (enhancedResults != null && !enhancedResults.isEmpty()) {
+        List<AEItemKey> fluidResults = FluidCraftingHelper.findBestMatchingFluidItemKeys(ingredient, filter, storage);
+
+        if (!fluidResults.isEmpty()) {
             List<AEItemKey> originalResults = cir.getReturnValue();
-            if (originalResults != null) {
+            if (originalResults == null || originalResults.isEmpty()) {
+                cir.setReturnValue(fluidResults);
+            } else {
+                Set<AEItemKey> enhancedResults = new LinkedHashSet<>(fluidResults);
                 enhancedResults.addAll(originalResults);
+                cir.setReturnValue(new ArrayList<>(enhancedResults));
             }
-            cir.setReturnValue(new ArrayList<>(enhancedResults));
         }
     }
 
@@ -64,26 +71,15 @@ public class FillCraftingGridFromRecipePacketMixin {
     @Inject(method = "findCraftableKey", at = @At("RETURN"), cancellable = true)
     private void checkFluidCraftableKey(Ingredient ingredient, ICraftingService craftingService,
             CallbackInfoReturnable<Optional<AEItemKey>> cir) {
+        if (!ae2fct$fluidCraftingEnabled.get()) {
+            return;
+        }
+
         if (cir.getReturnValue().isPresent()) {
             return; // 이미 아이템으로 craftable한 것을 찾았으면 추가 검사 불필요
         }
 
-        for (ItemStack stack : ingredient.getItems()) {
-            FluidStack fluidInItem = FluidUtil.getFluidContained(stack).orElse(FluidStack.EMPTY);
-            if (!fluidInItem.isEmpty()) {
-                AEFluidKey fluidKey = AEFluidKey.of(fluidInItem.getFluid());
-                if (fluidKey != null) {
-                    var craftable = craftingService.getFuzzyCraftable(fluidKey, key -> key.equals(fluidKey));
-                    if (craftable != null) {
-                        // VirtualFluidItem의 AEItemKey를 반환 (AutoCraftEntry가 AEItemKey를 요구하므로)
-                        AEItemKey vKey = AEItemKey.of(VirtualFluidItem.createItemStack(fluidInItem.getFluid()));
-                        if (vKey != null) {
-                            cir.setReturnValue(Optional.of(vKey));
-                            return;
-                        }
-                    }
-                }
-            }
-        }
+        FluidCraftingHelper.findCraftableFluidItemKey(ingredient, craftingService)
+                .ifPresent(vKey -> cir.setReturnValue(Optional.of(vKey)));
     }
 }

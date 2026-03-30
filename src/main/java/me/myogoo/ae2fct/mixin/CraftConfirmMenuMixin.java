@@ -7,11 +7,13 @@ import appeng.api.stacks.AEKey;
 import appeng.core.AELog;
 import appeng.helpers.ICraftingGridMenu;
 import appeng.menu.MenuOpener;
+import appeng.menu.me.common.MEStorageMenu;
 import appeng.menu.me.crafting.CraftConfirmMenu;
 import appeng.menu.locator.MenuHostLocator;
 import me.myogoo.ae2fct.codec.VirtualFluid;
 import me.myogoo.ae2fct.init.AE2FCTDataComponent;
 import me.myogoo.ae2fct.init.AE2FCTItems;
+import me.myogoo.myotus.menu.TerminalUpgradeHelper;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,8 +32,8 @@ public abstract class CraftConfirmMenuMixin {
      */
     @Inject(method = "openWithCraftingList", at = @At("HEAD"), cancellable = true)
     private static void convertVirtualFluidToCraft(@Nullable IActionHost terminal, ServerPlayer player,
-            @Nullable MenuHostLocator locator, List<ICraftingGridMenu.AutoCraftEntry> stacksToCraft,
-            CallbackInfo ci) {
+                                                   @Nullable MenuHostLocator locator, List<ICraftingGridMenu.AutoCraftEntry> stacksToCraft,
+                                                   CallbackInfo ci) {
         if (terminal == null || locator == null || stacksToCraft == null || stacksToCraft.isEmpty()) {
             return;
         }
@@ -47,6 +49,12 @@ public abstract class CraftConfirmMenuMixin {
 
         if (!hasVirtualFluid) {
             return; // VirtualFluidItem이 없으면 원본 로직 실행
+        }
+        if (player.containerMenu instanceof MEStorageMenu menu) {
+            if (!TerminalUpgradeHelper.hasUpgrade(menu, AE2FCTItems.TERMINAL_FLUID_INTERACT_CARD.get())) {
+                ci.cancel();
+                return;
+            }
         }
 
         // 원본 로직을 직접 수행하되, VirtualFluidItem에 대해 AEFluidKey를 사용

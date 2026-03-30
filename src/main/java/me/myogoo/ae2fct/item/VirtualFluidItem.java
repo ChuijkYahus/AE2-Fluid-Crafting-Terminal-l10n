@@ -20,8 +20,6 @@ public class VirtualFluidItem extends Item {
         super(new Properties());
     }
 
-
-
     @Override
     public void initializeClient(
             Consumer<IClientItemExtensions> consumer) {
