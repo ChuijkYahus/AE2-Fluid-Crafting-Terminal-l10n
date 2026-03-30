@@ -6,6 +6,8 @@ import appeng.api.stacks.KeyCounter;
 import appeng.core.network.serverbound.FillCraftingGridFromRecipePacket;
 import appeng.menu.me.common.MEStorageMenu;
 import appeng.util.prioritylist.IPartitionList;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import me.myogoo.ae2fct.init.AE2FCTItems;
 import me.myogoo.ae2fct.util.FluidCraftingHelper;
 import me.myogoo.myotus.menu.TerminalUpgradeHelper;
@@ -26,17 +28,19 @@ public class FillCraftingGridFromRecipePacketMixin {
     @Unique
     private static final ThreadLocal<Boolean> ae2fct$fluidCraftingEnabled = ThreadLocal.withInitial(() -> false);
 
-    @Inject(method = "handleOnServer", at = @At("HEAD"))
-    private void ae2fct$captureUpgradeState(ServerPlayer player, CallbackInfo ci) {
-        if(player.containerMenu instanceof MEStorageMenu menu) {
-        ae2fct$fluidCraftingEnabled.set(
-                TerminalUpgradeHelper.hasUpgrade(menu, AE2FCTItems.TERMINAL_FLUID_INTERACT_CARD.get()));
+    @WrapMethod(method = "handleOnServer")
+    private void ae2fct$withFluidCraftingState(ServerPlayer player, Operation<Void> original) {
+        boolean enabled = false;
+        if (player.containerMenu instanceof MEStorageMenu menu) {
+            enabled = TerminalUpgradeHelper.hasUpgrade(menu, AE2FCTItems.TERMINAL_FLUID_INTERACT_CARD.get());
         }
-    }
 
-    @Inject(method = "handleOnServer", at = @At("RETURN"))
-    private void ae2fct$clearUpgradeState(ServerPlayer player, CallbackInfo ci) {
-        ae2fct$fluidCraftingEnabled.remove();
+        ae2fct$fluidCraftingEnabled.set(enabled);
+        try {
+            original.call(player);
+        } finally {
+            ae2fct$fluidCraftingEnabled.remove();
+        }
     }
 
     @Inject(method = "findBestMatchingItemStack", at = @At("RETURN"), cancellable = true)

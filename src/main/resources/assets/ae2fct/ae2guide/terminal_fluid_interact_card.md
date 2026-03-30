@@ -13,11 +13,12 @@ item_ids:
 <ItemImage id="ae2fct:terminal_fluid_interact_card" scale={3}/>
 
 
-The <ItemLink id="ae2fct:terminal_fluid_interact_card" /> enables direct interaction between AE2 terminals and bookmarked items from JEI, EMI, and REI.
+The <ItemLink id="ae2fct:terminal_fluid_interact_card" /> enables direct interaction fluids without bucket.  
+This means you can craft bucket-based items at the <ItemLink id="ae2:crafting_terminal"/> without a bucket.  
+Try making a cake without a bucket!
 
-Once the card is installed, bookmark panels stop being passive references and become shortcuts into your ME network.
 
 ## Recipe
-<RecipesFor id="ae2tb:terminal_fluid_interact_card" />
+<RecipesFor id="ae2fct:terminal_fluid_interact_card" />
 
 

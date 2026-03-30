@@ -1,0 +1,105 @@
+package me.myogoo.ae2fct.mixin.et;
+
+import appeng.menu.me.common.IClientRepo;
+import appeng.menu.me.common.MEStorageMenu;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import me.myogoo.ae2fct.util.ExtendedTerminalCompatHelper;
+import me.myogoo.ae2fct.util.FluidCraftingHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+@Pseudo
+@Mixin(targets = "me.myogoo.extendedterminal.menu.ETTerminalBaseMenu", remap = false)
+public abstract class ETTerminalBaseMenuMixin extends MEStorageMenu {
+
+    private ETTerminalBaseMenuMixin() {
+        super(null, 0, null, null, false);
+    }
+
+    @Inject(method = "findMissingIngredients", at = @At("RETURN"), cancellable = true)
+    private void ae2fct$checkFluidForMissingIngredients(Map<Integer, Ingredient> ingredients,
+            CallbackInfoReturnable<appeng.menu.me.items.CraftingTermMenu.MissingIngredientSlots> cir) {
+        if (!ExtendedTerminalCompatHelper.hasFluidInteractUpgrade(this)) {
+            return;
+        }
+
+        var result = cir.getReturnValue();
+        if (!result.anyMissingOrCraftable()) {
+            return;
+        }
+
+        IClientRepo clientRepo = this.getClientRepo();
+        if (clientRepo == null) {
+            return;
+        }
+
+        Set<Integer> newMissing = new HashSet<>(result.missingSlots());
+        Set<Integer> newCraftable = new HashSet<>(result.craftableSlots());
+        Set<Integer> slotsToCheck = new HashSet<>();
+        boolean changed = false;
+
+        slotsToCheck.addAll(result.missingSlots());
+        slotsToCheck.addAll(result.craftableSlots());
+
+        for (int slot : slotsToCheck) {
+            Ingredient ingredient = ingredients.get(slot);
+            if (ingredient == null) {
+                continue;
+            }
+
+            var availability = FluidCraftingHelper.checkFluidAvailabilityInClientRepo(ingredient, clientRepo);
+            if (availability.available()) {
+                newMissing.remove(slot);
+                newCraftable.remove(slot);
+                changed = true;
+            } else if (availability.craftable() && newMissing.contains(slot)) {
+                newMissing.remove(slot);
+                newCraftable.add(slot);
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            cir.setReturnValue(new appeng.menu.me.items.CraftingTermMenu.MissingIngredientSlots(newMissing, newCraftable));
+        }
+    }
+
+    @Inject(method = "hasIngredient", at = @At("RETURN"), cancellable = true)
+    private void ae2fct$hasFluidIngredient(Ingredient ingredient, Object2IntOpenHashMap<Object> usedIngredients,
+            CallbackInfoReturnable<Boolean> cir) {
+        if (cir.getReturnValue() || !ExtendedTerminalCompatHelper.hasFluidInteractUpgrade(this)) {
+            return;
+        }
+
+        IClientRepo clientRepo = this.getClientRepo();
+        if (FluidCraftingHelper.hasAvailableFluidInClientRepo(ingredient, clientRepo, 1000)) {
+            cir.setReturnValue(true);
+        }
+    }
+
+    @Inject(method = "isCraftable", at = @At("RETURN"), cancellable = true)
+    private void ae2fct$checkFluidCraftable(ItemStack itemStack, CallbackInfoReturnable<Boolean> cir) {
+        if (cir.getReturnValue() || !ExtendedTerminalCompatHelper.hasFluidInteractUpgrade(this)) {
+            return;
+        }
+
+        IClientRepo clientRepo = this.getClientRepo();
+        if (clientRepo == null) {
+            return;
+        }
+
+        var availability = FluidCraftingHelper.checkFluidAvailabilityInClientRepo(Ingredient.of(itemStack), clientRepo);
+        if (availability.craftable()) {
+            cir.setReturnValue(true);
+        }
+    }
+}

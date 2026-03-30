@@ -1,4 +1,6 @@
 # Changelog
 
-## BugFixes
-- Fixed an issue where fluid items could be picked up even when not at 1000mb
+## Features
+- Now need **Terminal Fluid Interact Card** for interact fluids without bucket.
+- Add guideme
+- Integration with Extended Terminal

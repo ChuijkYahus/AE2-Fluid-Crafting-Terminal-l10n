@@ -10,8 +10,8 @@ import net.minecraft.world.item.TooltipFlag;
 import java.util.List;
 
 public class TerminalFluidInteractCardItem extends Item implements ITerminalUpgradeCard {
-    public TerminalFluidInteractCardItem(Properties properties) {
-        super(properties);
+    public TerminalFluidInteractCardItem() {
+        super(new Properties());
     }
 
     @Override

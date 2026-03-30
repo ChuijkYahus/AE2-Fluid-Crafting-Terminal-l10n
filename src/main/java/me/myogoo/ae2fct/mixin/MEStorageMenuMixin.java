@@ -131,10 +131,8 @@ public abstract class MEStorageMenuMixin extends AEBaseMenu {
         }
     }
 
-    @Override
-    public void removed(Player player) {
-        super.removed(player);
-
+    @Unique
+    private void aE2FluidCraftingTerminal_1_21_1$returnMenuVirtualFluidItems(Player player) {
         if (player.level().isClientSide() || this.storage == null || this.energySource == null) {
             return;
         }
@@ -157,6 +155,27 @@ public abstract class MEStorageMenuMixin extends AEBaseMenu {
                 }
             }
         }
+
+        for (Slot slot : this.slots) {
+            if (slot == null || this.isPlayerSideSlot(slot)) {
+                continue;
+            }
+
+            ItemStack stack = slot.getItem();
+            if (!aE2FluidCraftingTerminal_1_21_1$isVirtualFluidItem(stack)) {
+                continue;
+            }
+
+            returnVirtualFluidToStorage(stack, stack.getCount());
+            if (stack.isEmpty()) {
+                slot.setByPlayer(ItemStack.EMPTY);
+            }
+        }
+    }
+
+    @Inject(method = "removed", at = @At("TAIL"))
+    private void aE2FluidCraftingTerminal_1_21_1$onRemoved(Player player, CallbackInfo ci) {
+        aE2FluidCraftingTerminal_1_21_1$returnMenuVirtualFluidItems(player);
     }
 
     @Override

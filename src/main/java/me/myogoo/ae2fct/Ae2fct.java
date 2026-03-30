@@ -20,7 +20,7 @@ public class Ae2fct {
     public Ae2fct(IEventBus modEventBus, ModContainer modContainer) {
         AE2FCTConfig.initialize(modContainer);
         AE2FCTDataComponent.REGISTER.register(modEventBus);
-        AE2FCTItems.ITEMS.register(modEventBus);
+        AE2FCTItems.REGISTER.register(modEventBus);
         modEventBus.addListener(this::buildCreativeTabContents);
     }
 
